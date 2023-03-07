@@ -8,17 +8,6 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-//1 :-->Echo Starting Video 9,10
-// func main() {
-// 	e := echo.New()
-// 	e.GET("/", func(c echo.Context) error {
-// 		//	return c.String(200, "Well! Hello there!!")
-// 		return c.String(http.StatusOK, "Well! Hello there!!")
-
-//		})
-//		e.Logger.Print("Server is running on port 8080")
-//		e.Logger.Fatal(e.Start(":8080"))
-//	}
 func main() {
 	port := os.Getenv("MY_APP_PORT")
 	if port == "" {
@@ -31,13 +20,15 @@ func main() {
 	e.GET("/", func(c echo.Context) error {
 		return c.String(http.StatusOK, "Well! Hello there!!")
 	})
+	e.GET("/products", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, products)
+	})
 	e.GET("/products/:id", func(c echo.Context) error {
 		var product map[int]string
 		// range over products slice and get each map like {1:"mobiles"}
 		for _, p := range products {
 			for k := range p {
 
-				// product id is string so we need to convert it to integer, pID is fetcjhe from path parameter,here id is path parameter
 				pId, err := strconv.Atoi(c.Param("id"))
 				if err != nil {
 					return err
@@ -51,6 +42,26 @@ func main() {
 			// status not found is 404
 			return c.JSON(http.StatusNotFound, "product not found")
 		}
+		return c.JSON(http.StatusOK, product)
+	})
+	// e.GET("/products/:vendor", func(c echo.Context) error {
+	// 	return c.JSON(http.StatusOK, c.Param("vendor"))
+	// })
+	e.GET("/products/:vendor", func(c echo.Context) error {
+		return c.JSON(http.StatusOK, c.QueryParam("olderThan"))
+	})
+	e.POST("/products", func(c echo.Context) error {
+		type body struct {
+			Name string `json:"product_name"`
+		}
+		var reqBody body
+		if err := c.Bind(&reqBody); err != nil {
+			return err
+		}
+		product := map[int]string{
+			len(products) + 1: reqBody.Name,
+		}
+		products = append(products, product)
 		return c.JSON(http.StatusOK, product)
 	})
 	e.Logger.Print("Server is running on port 8080")
