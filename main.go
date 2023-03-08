@@ -9,6 +9,15 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+// ProdcutValidator  echo Validator for Product
+type ProdcutValidator struct {
+	validator *validator.Validate
+}
+
+// Validate validates product request body
+func (p *ProdcutValidator) Validate(i interface{}) error {
+	return p.validator.Struct(i)
+}
 func main() {
 	port := os.Getenv("MY_APP_PORT")
 	if port == "" {
@@ -54,15 +63,22 @@ func main() {
 	})
 	e.POST("/products", func(c echo.Context) error {
 		type body struct {
-			Name string `json:"product_name" validate:"required,min=4"`
+			Name string `json:"product_name" validate:"required,min=4"` //validate added
 		}
 		var reqBody body
+		//adding echo validator
+		e.Validator = &ProdcutValidator{validator: v}
 		if err := c.Bind(&reqBody); err != nil {
 			return err
 		}
-		if err := v.Struct(reqBody); err != nil {
+		//adding echoValidator
+		if err := c.Validate(reqBody); err != nil {
 			return err
 		}
+		// //adding validation
+		// if err := v.Struct(reqBody); err != nil {
+		// 	return err
+		// }
 		product := map[int]string{
 			len(products) + 1: reqBody.Name,
 		}
